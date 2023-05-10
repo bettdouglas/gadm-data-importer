@@ -39,7 +39,7 @@ for filename in filenames:
         lev = lev.rename(columns={f"NAME_{level}": "name", f"GID_{level}": "id", f"TYPE_{level}": "region_type"})[["id", "name", "region_type", "geometry"]]
         gdf_layers.append(lev)
 
-    os.remove(filename)
+    # os.remove(filename)
 
 merged_df = pd.concat(gdf_layers)
 merged_df["created_at"] = datetime.now()
