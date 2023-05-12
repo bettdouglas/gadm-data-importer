@@ -3,10 +3,11 @@ RUN python -m pip install --upgrade pip
 
 COPY requirements.txt /opt/app/requirements.txt
 
-COPY *.gpkg *.gpkg
 WORKDIR /opt/app
 
-RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install -r requirements.txt
+# RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip 
+
+RUN pip install -r requirements.txt
 
 COPY . .
 

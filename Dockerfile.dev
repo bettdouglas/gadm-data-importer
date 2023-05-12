@@ -1,0 +1,19 @@
+FROM python:3.8-slim
+RUN python -m pip install --upgrade pip
+
+COPY requirements.txt /opt/app/requirements.txt
+
+WORKDIR /opt/app
+
+COPY gadm41_KEN.gpkg gadm41_KEN.gpkg
+COPY gadm41_RWA.gpkg gadm41_RWA.gpkg
+COPY gadm41_TZA.gpkg gadm41_TZA.gpkg
+COPY gadm41_UGA.gpkg gadm41_UGA.gpkg
+
+RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install -r requirements.txt
+
+COPY . .
+
+ENV PYTHONUNBUFFERED=1
+
+CMD python data_importer.py

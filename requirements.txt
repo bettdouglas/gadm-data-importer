@@ -3,3 +3,7 @@ glog
 geopandas
 pandas
 fiona
+python-decouple
+sqlalchemy
+psycopg2-binary
+geoalchemy2

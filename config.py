@@ -2,6 +2,9 @@ import logging
 from decouple import config
 import sqlalchemy
 
+import os
+
+
 POSTGRES_DB = config("DB_NAME")
 POSTGRES_USER = config("DB_USER")
 POSTGRES_PASSWORD = config("DB_PASS")
