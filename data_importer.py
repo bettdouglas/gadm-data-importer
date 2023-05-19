@@ -14,18 +14,35 @@ base_url = "https://geodata.ucdavis.edu/gadm/gadm4.1/gpkg/"
 
 filenames = [
      "gadm41_KEN.gpkg",
-    #  "gadm41_RWA.gpkg",
-    #  "gadm41_TZA.gpkg",
-    #  "gadm41_UGA.gpkg",
+     "gadm41_RWA.gpkg",
+     "gadm41_TZA.gpkg",
+     "gadm41_UGA.gpkg",
 ]
-gdf_layers = []
+from sqlalchemy import create_engine
+db_engine = create_engine(DB_CONN_STRING)
 
+def import_to_postgis(gdf,filename):
+    glog.info(f"importing {filename} to {db_engine}")
+
+    try:
+        gdf.to_postgis(
+            "regions",
+            if_exists="append",
+            con=db_engine,
+            index_label="id",
+            chunksize=100,
+        )
+        glog.info(f"Finished importing {filename} data")
+    except Exception as e:
+        glog.warn(e)
+        pass
 
 
 for filename in filenames:
     glog.info(os.path.exists(filename))
 
 for filename in filenames:
+    gdf_layers = []
     glog.info(f"Processing {filename}")
     # try:
     #     layers = fiona.listlayers(filename)
@@ -49,40 +66,20 @@ for filename in filenames:
         lev = gpd.read_file(filename,layer=layer)
         lev = lev.rename(columns={f"NAME_{level}": "name", f"GID_{level}": "id", f"TYPE_{level}": "region_type"})[["id", "name", "region_type", "geometry"]]
         gdf_layers.append(lev)
-
-    # os.remove(filename)
-
-merged_df = pd.concat(gdf_layers)
-merged_df["created_at"] = datetime.now()
-
-# glog.info(set(merged_df['region_type']))
-
-print(merged_df[merged_df["id"].isna()])
-print(merged_df[merged_df["name"].isna()])
-print(merged_df[merged_df["region_type"].isna()])
-print(merged_df[merged_df["geometry"].isna()])
-
-# glog.info(merged_df.head())
-
-gdf = gpd.GeoDataFrame(merged_df)
-
-# glog.info(gdf.crs)
-
-from sqlalchemy import create_engine
-db_engine = create_engine(DB_CONN_STRING)
+    
+    merged_df = pd.concat(gdf_layers)
+    merged_df["created_at"] = datetime.now()
+    gdf = gpd.GeoDataFrame(merged_df)
+    import_to_postgis(gdf,filename)
 
 
-glog.info(f"importing to {db_engine}")
+glog.info("Finished importing all datasets")
+with db_engine.connect() as conn:
 
-gdf.to_postgis(
-    "regions",
-    if_exists="append",
-    con=db_engine,
-    index_label="id",
-    chunksize=100,
-)
-glog.info("Finished importing data")
 
+    conn.execute('UPDATE regions set simplified_geometry = ST_SimplifyPreserveTopology(geometry,0.01)')
+
+glog.info("Finished simplifying geometries")
 
 
 # glog.info(merged_df.shape)
