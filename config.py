@@ -8,8 +8,8 @@ import os
 POSTGRES_DB = config("DB_NAME")
 POSTGRES_USER = config("DB_USER")
 POSTGRES_PASSWORD = config("DB_PASS")
-POSTGRES_HOST = config("DB_HOST", default=None)
-POSTGRES_PORT = config("DB_PORT", default=None)
+POSTGRES_HOST = config("DB_HOST")
+POSTGRES_PORT = config("DB_PORT")
 TEST_POSTGRES_DB=config("TEST_DB_NAME",default=None)
 ECHO_DB=config("ECHO_DB",default=False,cast=bool)
 
@@ -20,3 +20,4 @@ DB_KEY = config("DB_KEY", default=None)
 DB_SOCKET_DIR = config("DB_SOCKET_DIR", default="/cloudsql")
 
 DB_CONN_STRING = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
+DELETE_ON_IMPORT = config("DELETE_ON_IMPORT",default=False,cast=bool)

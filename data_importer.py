@@ -2,7 +2,7 @@ import wget
 import fiona
 import pandas as pd
 import geopandas as gpd
-from config import DB_CONN_STRING
+from config import DB_CONN_STRING,DELETE_ON_IMPORT
 from datetime import datetime
 from fiona.errors import DriverError
 import os
@@ -20,6 +20,7 @@ filenames = [
 ]
 from sqlalchemy import create_engine
 db_engine = create_engine(DB_CONN_STRING)
+print(db_engine)
 
 def import_to_postgis(gdf,filename):
     glog.info(f"importing {filename} to {db_engine}")
@@ -71,13 +72,15 @@ for filename in filenames:
     merged_df["created_at"] = datetime.now()
     gdf = gpd.GeoDataFrame(merged_df)
     import_to_postgis(gdf,filename)
+    if DELETE_ON_IMPORT:
+        os.remove(filename)
 
 
 glog.info("Finished importing all datasets")
 with db_engine.connect() as conn:
+    from sqlalchemy import text
 
-
-    conn.execute('UPDATE regions set simplified_geometry = ST_SimplifyPreserveTopology(geometry,0.01)')
+    conn.execute(text('UPDATE regions set simplified_geometry = ST_SimplifyPreserveTopology(geometry,0.01)'))
 
 glog.info("Finished simplifying geometries")
 
