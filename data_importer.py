@@ -31,12 +31,19 @@ def import_to_postgis(gdf,filename):
             if_exists="append",
             con=db_engine,
             index_label="id",
-            chunksize=100,
         )
         glog.info(f"Finished importing {filename} data")
     except Exception as e:
         glog.warn(e)
         pass
+
+def simplify_geojson(file,percentage) -> str:
+    import subprocess
+    # mapshaper kenya_counties.geojson -simplify 10% visvalingam -o format=geojson kenya_counties_simplified_10.geojson
+    output = file.replace(".geojson",f"_{percentage}.geojson")
+    subprocess.run(["mapshaper",file,"-simplify","10%","visvalingam","-o", "format=geojson",output])
+    return output
+
 
 
 for filename in filenames:
@@ -71,16 +78,28 @@ for filename in filenames:
     merged_df = pd.concat(gdf_layers)
     merged_df["created_at"] = datetime.now()
     gdf = gpd.GeoDataFrame(merged_df)
+    geojson_filename = f'{filename}.geojson'
+    gdf[['id','geometry']].to_file(geojson_filename,driver='GeoJSON',index=True)
+
+    simplified_path = simplify_geojson(geojson_filename,"10%")
+    simplified_gdf = gpd.read_file(simplified_path)
+
+    gdf = pd.merge(gdf,simplified_gdf,on='id',suffixes=[None,'_simplified'])
+    gdf = gdf[['id','name','region_type','geometry','created_at','geometry_simplified']]
+    gdf.rename(columns={'geometry_simplified':'simplified_geometry'},inplace=True)
+
     import_to_postgis(gdf,filename)
     if DELETE_ON_IMPORT:
         os.remove(filename)
+    os.remove(geojson_filename)
+    os.remove(simplified_path)
 
 
 glog.info("Finished importing all datasets")
-with db_engine.connect() as conn:
-    from sqlalchemy import text
+# with db_engine.connect() as conn:
+#     from sqlalchemy import text
 
-    conn.execute(text('UPDATE regions set simplified_geometry = ST_SimplifyPreserveTopology(geometry,0.01)'))
+#     conn.execute(text('UPDATE regions set simplified_geometry = ST_SimplifyPreserveTopology(geometry,0.01)'))
 
 glog.info("Finished simplifying geometries")
 

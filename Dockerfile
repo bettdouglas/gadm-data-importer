@@ -1,5 +1,7 @@
-FROM python:3.8-slim
+FROM nikolaik/python-nodejs:python3.8-nodejs18-slim
 RUN python -m pip install --upgrade pip
+
+RUN npm install -g mapshaper
 
 COPY requirements.txt /opt/app/requirements.txt
 
@@ -13,4 +15,4 @@ COPY . .
 
 ENV PYTHONUNBUFFERED=1
 
-RUN python data_importer.py
+CMD python data_importer.py

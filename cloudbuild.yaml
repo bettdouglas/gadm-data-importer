@@ -1,0 +1,9 @@
+steps:
+- name: "gcr.io/cloud-builders/docker"
+  args:
+  - build
+  - "--tag=gcr.io/$PROJECT_ID/issues-service-gadm-data-importer"
+  - "--file=Dockerfile"
+  - .
+images:
+- "gcr.io/$PROJECT_ID/issues-service-gadm-data-importer"
