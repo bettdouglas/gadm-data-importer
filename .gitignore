@@ -155,3 +155,4 @@ __pycache__/
 deploy.sh
 .env
 .env.yaml
+*.geojson

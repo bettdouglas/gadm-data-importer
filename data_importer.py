@@ -4,7 +4,6 @@ import pandas as pd
 import geopandas as gpd
 from config import DB_CONN_STRING,DELETE_ON_IMPORT
 from datetime import datetime
-from fiona.errors import DriverError
 import os
 import glog
 
@@ -43,11 +42,6 @@ def simplify_geojson(file,percentage) -> str:
     output = file.replace(".geojson",f"_{percentage}.geojson")
     subprocess.run(["mapshaper",file,"-simplify","10%","visvalingam","-o", "format=geojson",output])
     return output
-
-
-
-for filename in filenames:
-    glog.info(os.path.exists(filename))
 
 for filename in filenames:
     gdf_layers = []
